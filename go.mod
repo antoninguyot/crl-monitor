@@ -1,4 +1,4 @@
-module github.com/evertrust/entra-secret-monitor
+module github.com/evertrust/crl-monitor
 
 go 1.22.4
 
