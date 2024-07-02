@@ -26,8 +26,6 @@ var gauge = promauto.NewGaugeVec(prometheus.GaugeOpts{
 
 var k = koanf.New(".")
 
-var crls []string
-
 func main() {
 	var refreshInterval time.Duration
 	var configFile string
@@ -35,7 +33,7 @@ func main() {
 	flag.StringVar(&configFile, "config", "", "config file listing CRLs to monitor")
 	flag.Parse()
 
-	if configFile != "" {
+	if configFile == "" {
 		log.Fatalf("Please specify a config file with -config")
 	}
 
