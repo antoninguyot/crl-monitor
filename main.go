@@ -19,9 +19,14 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
-var gauge = promauto.NewGaugeVec(prometheus.GaugeOpts{
+var expirationTime = promauto.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "crl_monitor_expire_time_seconds",
 	Help: "Expiration time of CRLs in seconds since epoch",
+}, []string{"crldp"})
+
+var generationTime = promauto.NewGaugeVec(prometheus.GaugeOpts{
+	Name: "crl_monitor_generate_time_seconds",
+	Help: "Generation time of CRLs in seconds since epoch",
 }, []string{"crldp"})
 
 var k = koanf.New(".")
@@ -62,7 +67,7 @@ func main() {
 	go monitorCRLs(refreshInterval)
 
 	r := prometheus.NewRegistry()
-	r.MustRegister(gauge)
+	r.MustRegister(generationTime, expirationTime)
 
 	http.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
 	log.Fatal(http.ListenAndServe(":2112", nil))
@@ -88,7 +93,8 @@ func updateMetrics() error {
 		if err != nil {
 			log.Fatalf("Error fetching CRL: %s", err)
 		}
-		gauge.WithLabelValues(crlDp).Set(float64(crl.ThisUpdate.Unix()))
+		generationTime.WithLabelValues(crlDp).Set(float64(crl.ThisUpdate.Unix()))
+		expirationTime.WithLabelValues(crlDp).Set(float64(crl.NextUpdate.Unix()))
 	}
 
 	return nil
