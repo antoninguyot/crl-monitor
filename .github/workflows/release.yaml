@@ -28,7 +28,7 @@ jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
     needs: release-please
-    if: ${{ jobs.release-please.outputs.release_created }}
+    if: ${{ needs.release-please.outputs.release_created }}
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
       contents: read
