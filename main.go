@@ -5,18 +5,17 @@ import (
 	"crypto/x509"
 	"flag"
 	"fmt"
+	"github.com/knadh/koanf/parsers/yaml"
+	"github.com/knadh/koanf/providers/file"
+	"github.com/knadh/koanf/v2"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"time"
-
-	"github.com/knadh/koanf/parsers/yaml"
-	"github.com/knadh/koanf/providers/file"
-	"github.com/knadh/koanf/v2"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 var expirationTime = promauto.NewGaugeVec(prometheus.GaugeOpts{
@@ -47,10 +46,6 @@ func main() {
 		log.Fatalf("error loading config: %s", err)
 	}
 
-	if err := k.Load(f, yaml.Parser()); err != nil {
-		log.Fatalf("error loading config: %s", err)
-	}
-
 	f.Watch(func(event interface{}, err error) {
 		if err != nil {
 			log.Printf("watch error: %s", err)
@@ -75,29 +70,26 @@ func main() {
 
 func monitorCRLs(refreshInterval time.Duration) {
 	for {
-		err := updateMetrics()
-		if err != nil {
-			log.Printf("Error updating metrics: %s", err)
-		}
+		updateMetrics()
 		time.Sleep(refreshInterval)
 	}
 }
 
-func updateMetrics() error {
+func updateMetrics() {
 	for _, crlDp := range k.Strings("crls") {
 		crlUrl, err := url.Parse(crlDp)
 		if err != nil {
-			log.Fatalf("Error parsing URL: %s", err)
+			log.Printf("Error parsing URL: %s", err)
+			continue
 		}
 		crl, err := fetchCrl(*crlUrl)
 		if err != nil {
-			log.Fatalf("Error fetching CRL: %s", err)
+			log.Printf("Error fetching CRL: %s", err)
+			continue
 		}
 		generationTime.WithLabelValues(crlDp).Set(float64(crl.ThisUpdate.Unix()))
 		expirationTime.WithLabelValues(crlDp).Set(float64(crl.NextUpdate.Unix()))
 	}
-
-	return nil
 }
 
 func fetchCrl(url url.URL) (*x509.RevocationList, error) {
@@ -110,19 +102,19 @@ func fetchCrl(url url.URL) (*x509.RevocationList, error) {
 	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching CRL at %s: %s", url, err)
+		return nil, fmt.Errorf("error fetching CRL at %s: %s", url.String(), err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("error reading body of CRL at %s: %s", url, err)
+		return nil, fmt.Errorf("error reading body of CRL at %s: %s", url.String(), err)
 	}
 
 	// Parse the CRL
 	crl, err := x509.ParseRevocationList(body)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing CRL at %s: %s", url, err)
+		return nil, fmt.Errorf("error parsing CRL at %s: %s", url.String(), err)
 	}
 
 	return crl, nil
