@@ -22,10 +22,13 @@ jobs:
         id: release
         with:
           release-type: go
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
 
   build-and-push-image:
     runs-on: ubuntu-latest
-    if: ${{ steps.release.outputs.release_created }}
+    needs: release-please
+    if: ${{ jobs.release-please.outputs.release_created }}
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
       contents: read
