@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/antoninguyot/crl-monitor/compare/v1.1.1...v1.1.2) (2024-07-31)
+
+
+### Bug Fixes
+
+* test release ([06eaabd](https://github.com/antoninguyot/crl-monitor/commit/06eaabd51c4c1debb3f31cd25f024af34429888f))
+
 ## [1.1.1](https://github.com/antoninguyot/crl-monitor/compare/v1.1.0...v1.1.1) (2024-07-31)
 
 
