@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/antoninguyot/crl-monitor/compare/v1.1.2...v1.1.3) (2024-08-01)
+
+
+### Bug Fixes
+
+* fixed release token permissions ([8690515](https://github.com/antoninguyot/crl-monitor/commit/8690515d1b23d7437a603dc7d7678ef55f0f1dfd))
+
 ## [1.1.2](https://github.com/antoninguyot/crl-monitor/compare/v1.1.1...v1.1.2) (2024-07-31)
 
 
